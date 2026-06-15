@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acervo Rondoniense</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>  tailwind.config = {
+    theme: {
+      extend: {},
+    }
+  }
+</script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-white text-zinc-950">
+    <nav class="border-b border-zinc-200 bg-white sticky top-0 z-50">
+        <div class="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between" id="navbar">
+            <!-- Renderizado via JS -->
+        </div>
+    </nav>
+
+    <main class="mx-auto w-full max-w-6xl px-4 py-10">
+        <section class="mb-12 rounded-2xl bg-zinc-900 px-8 py-12 text-white">
+            <div class="mb-4 flex items-center gap-3">
+                <i data-lucide="landmark" class="h-8 w-8"></i>
+                <h1 class="text-3xl font-semibold tracking-tight">Acervo Rondoniense</h1>
+            </div>
+            <p class="mb-6 max-w-xl text-zinc-300">
+                Catálogo digital do patrimônio histórico, cultural e turístico de Rondônia.
+            </p>
+            <div class="flex flex-wrap gap-3">
+                <a href="busca.html" class="inline-flex items-center gap-2 bg-white text-zinc-900 px-4 py-2 rounded-md font-medium hover:bg-zinc-100">
+                    <i data-lucide="search" class="h-4 w-4"></i> Busca avançada
+                </a>
+                <a href="login.html" class="inline-flex items-center gap-2 border border-zinc-600 text-white px-4 py-2 rounded-md font-medium hover:bg-zinc-800">
+                    Sugerir patrimônio
+                </a>
+            </div>
+        </section>
+
+        <div id="loading" class="text-center py-10 text-zinc-500">Carregando acervo...</div>
+
+        <div id="destaques-section" class="hidden mb-10">
+            <h2 class="mb-4 text-xl font-semibold">Destaques</h2>
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="destaques-grid"></div>
+        </div>
+
+        <div id="acervo-section" class="hidden">
+            <h2 class="mb-4 text-xl font-semibold">Acervo completo</h2>
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="acervo-grid"></div>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        async function init() {
+            renderNav();
+            const loading = document.getElementById('loading');
+            try {
+                const data = await fetchPatrimonios();
+                loading.remove();
+
+                const destaques = data.filter(p => p.destaque == 1);
+                const demais = data.filter(p => p.destaque == 0);
+
+                if (destaques.length > 0) {
+                    document.getElementById('destaques-section').classList.remove('hidden');
+                    const grid = document.getElementById('destaques-grid');
+                    destaques.forEach(p => grid.innerHTML += renderPatrimonioCard(p));
+                }
+
+                if (demais.length > 0) {
+                    document.getElementById('acervo-section').classList.remove('hidden');
+                    const grid = document.getElementById('acervo-grid');
+                    demais.forEach(p => grid.innerHTML += renderPatrimonioCard(p));
+                }
+                lucide.createIcons();
+            } catch (e) {
+                loading.innerText = 'Erro ao carregar dados.';
+            }
+        }
+        init();
+    </script>
+</body>
+</html>

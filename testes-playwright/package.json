@@ -1,0 +1,14 @@
+{
+  "name": "testes-playwright-acervo-rondoniense",
+  "version": "1.0.0",
+  "description": "Testes automatizados E2E com Playwright — Acervo Rondoniense",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "report": "npx playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
+  }
+}

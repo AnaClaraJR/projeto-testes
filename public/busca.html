@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca Avançada - Acervo Rondoniense</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>  tailwind.config = {
+    theme: {
+      extend: {},
+    }
+  }
+</script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-white text-zinc-950">
+    <nav class="border-b border-zinc-200 bg-white sticky top-0 z-50">
+        <div class="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between" id="navbar"></div>
+    </nav>
+
+    <main class="mx-auto w-full max-w-6xl px-4 py-10">
+        <header class="mb-6">
+            <h1 class="text-2xl font-semibold flex items-center gap-2"><i data-lucide="filter" class="h-5 w-5"></i> Busca avançada</h1>
+            <p class="text-sm text-zinc-600">Refine sua pesquisa no acervo.</p>
+        </header>
+
+        <div class="bg-white border border-zinc-200 rounded-xl shadow-sm p-6 mb-8">
+            <div class="grid gap-4 md:grid-cols-3">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">Texto</label>
+                    <input type="text" id="filter-q" oninput="filtrar()" class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">Cidade</label>
+                    <select id="filter-cidade" onchange="filtrar()" class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm bg-white">
+                        <option value="">Todas</option>
+                        <option value="Porto Velho">Porto Velho</option>
+                        <option value="Ji-Paraná">Ji-Paraná</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">Categoria</label>
+                    <select id="filter-cat" onchange="filtrar()" class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm bg-white">
+                        <option value="">Todas</option>
+                        <option value="Histórico">Histórico</option>
+                        <option value="Natural">Natural</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <section>
+            <h2 class="text-lg font-semibold mb-4" id="results-count">Resultados</h2>
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="results-grid"></div>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        let allPatrimonios = [];
+        async function init() {
+            renderNav();
+            allPatrimonios = await fetchPatrimonios();
+            filtrar();
+        }
+
+        function filtrar() {
+            const q = document.getElementById('filter-q').value.toLowerCase();
+            const cidade = document.getElementById('filter-cidade').value;
+            const cat = document.getElementById('filter-cat').value;
+
+            const filtrados = allPatrimonios.filter(p => {
+                const matchQ = !q || p.nome.toLowerCase().includes(q) || p.descricao_historica.toLowerCase().includes(q);
+                const matchCidade = !cidade || p.cidade === cidade;
+                const matchCat = !cat || p.categoria === cat;
+                return matchQ && matchCidade && matchCat;
+            });
+
+            const grid = document.getElementById('results-grid');
+            grid.innerHTML = '';
+            filtrados.forEach(p => grid.innerHTML += renderPatrimonioCard(p));
+            document.getElementById('results-count').innerText = `${filtrados.length} encontrado(s)`;
+            lucide.createIcons();
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Acervo Rondoniense</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>  tailwind.config = {
+    theme: {
+      extend: {},
+    }
+  }
+</script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-white text-zinc-950">
+    <nav class="border-b border-zinc-200 bg-white sticky top-0 z-50">
+        <div class="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between" id="navbar"></div>
+    </nav>
+
+    <main class="mx-auto max-w-7xl p-4 md:p-6">
+        <div id="mensagem" class="hidden mb-6 rounded-md p-3 text-sm"></div>
+
+        <div class="grid gap-6 md:grid-cols-2">
+            <!-- Autenticação -->
+            <div class="bg-white border border-zinc-200 rounded-xl shadow-sm p-6">
+                <div id="auth-container">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- Sugestão -->
+            <div class="bg-white border border-zinc-200 rounded-xl shadow-sm p-6" id="sugestao-container">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        const sessao = JSON.parse(localStorage.getItem('user_sessao'));
+        const params = new URLSearchParams(window.location.search);
+        let modo = params.get('modo') || 'login';
+
+        function renderAuth() {
+            const container = document.getElementById('auth-container');
+            if (sessao) {
+                container.innerHTML = `
+                    <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
+                        <i data-lucide="shield-check" class="h-5 w-5 text-emerald-600"></i> Sua Conta
+                    </h2>
+                    <div class="rounded-lg border border-zinc-100 bg-zinc-50 p-4 mb-4">
+                        <p class="text-sm font-medium">Sessão Autenticada</p>
+                        <p class="mt-1 text-xs text-zinc-500">Logado como: ${sessao.email}</p>
+                    </div>
+                    <button onclick="handleLogout()" class="w-full h-10 border border-zinc-200 rounded-md text-sm font-medium hover:bg-zinc-50">Sair</button>
+                `;
+            } else if (modo === 'login') {
+                container.innerHTML = `
+                    <h2 class="text-xl font-semibold mb-4">Acessar Plataforma</h2>
+                    <form onsubmit="handleLogin(event)" class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">E-mail</label>
+                            <input type="email" id="email" required class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm" data-testid="login-email">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Senha</label>
+                            <input type="password" id="senha" required class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm" data-testid="login-password">
+                        </div>
+                        <button type="submit" class="w-full h-10 bg-zinc-900 text-white rounded-md font-medium" data-testid="login-submit">Entrar</button>
+                        <center><a href="?modo=cadastro" class="text-xs underline text-zinc-600">Criar conta</a></center>
+                    </form>
+                `;
+            } else {
+                container.innerHTML = `
+                    <h2 class="text-xl font-semibold mb-4">Criar Conta</h2>
+                    <form onsubmit="handleRegister(event)" class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Nome</label>
+                            <input type="text" id="reg-nome" required class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">E-mail</label>
+                            <input type="email" id="reg-email" required class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Senha</label>
+                            <input type="password" id="reg-senha" required class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm">
+                        </div>
+                        <button type="submit" class="w-full h-10 bg-zinc-900 text-white rounded-md font-medium">Cadastrar</button>
+                        <center><a href="?modo=login" class="text-xs underline text-zinc-600">Já tenho conta</a></center>
+                    </form>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        function renderSugestao() {
+            const container = document.getElementById('sugestao-container');
+            if (!sessao) {
+                container.innerHTML = `<div class="flex h-48 flex-col items-center justify-center text-zinc-500 text-sm border border-dashed rounded-lg">Faça login para sugerir.</div>`;
+            } else {
+                container.innerHTML = `
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="user-plus" class="h-5 w-5"></i> Sugerir Patrimônio</h2>
+                    <form onsubmit="handleSugestao(event)" class="space-y-4" data-testid="sugestao-form">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Nome</label>
+                            <input type="text" id="sug-nome" required class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm" data-testid="sugestao-nome">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Cidade</label>
+                            <select id="sug-cidade" required class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm bg-white">
+                                <option value="">Selecione</option>
+                                <option value="Porto Velho">Porto Velho</option>
+                                <option value="Ji-Paraná">Ji-Paraná</option>
+                                <option value="Ariquemes">Ariquemes</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Descrição</label>
+                            <textarea id="sug-desc" required rows="3" class="w-full p-3 border border-zinc-200 rounded-md text-sm"></textarea>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">URL Imagem</label>
+                            <input type="url" id="sug-foto" required class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Categoria</label>
+                            <select id="sug-cat" required class="w-full h-10 px-3 border border-zinc-200 rounded-md text-sm bg-white">
+                                <option value="Histórico">Histórico</option>
+                                <option value="Natural">Natural</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full h-10 bg-zinc-900 text-white rounded-md font-medium" data-testid="enviar-sugestao">Enviar</button>
+                    </form>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const res = await login(document.getElementById('email').value, document.getElementById('senha').value);
+            if (res.ok) {
+                localStorage.setItem('user_sessao', JSON.stringify(res.usuario));
+                window.location.reload();
+            } else {
+                showMsg(res.error, 'erro');
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const res = await register(document.getElementById('reg-nome').value, document.getElementById('reg-email').value, document.getElementById('reg-senha').value);
+            if (res.ok) {
+                showMsg('Cadastro realizado! Faça login.', 'sucesso');
+                modo = 'login';
+                renderAuth();
+            } else {
+                showMsg(res.error, 'erro');
+            }
+        }
+
+        async function handleSugestao(e) {
+            e.preventDefault();
+            const res = await fetch('../api/sugestoes.php', {
+                method: 'POST',
+                body: JSON.stringify({
+                    nome: document.getElementById('sug-nome').value,
+                    cidade: document.getElementById('sug-cidade').value,
+                    descricao_historica: document.getElementById('sug-desc').value,
+                    url_foto_principal: document.getElementById('sug-foto').value,
+                    categoria: document.getElementById('sug-cat').value
+                })
+            });
+            const data = await res.json();
+            if (data.ok) showMsg('Sugestão enviada!', 'sucesso');
+        }
+
+        function showMsg(txt, tipo) {
+            const el = document.getElementById('mensagem');
+            el.innerText = txt;
+            el.className = `mb-6 rounded-md p-3 text-sm ${tipo === 'sucesso' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`;
+            el.classList.remove('hidden');
+        }
+
+        renderNav();
+        renderAuth();
+        renderSugestao();
+    </script>
+</body>
+</html>
